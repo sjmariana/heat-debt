@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sleeve Heat Dashboard</title>
+<style>
+:root{
+  --bg:#FBF5EC; --card:#FFFFFF; --ink:#2B2622; --muted:#8A7F75; --line:#EADFD0;
+  --orange:#F2733A; --coral:#F0896B; --peach:#FDE7D6; --mint:#DDF0E4; --lilac:#E9E3F6; --sun:#FFF1C9;
+  --caution:#E9B44C; --warning:#F2733A; --danger:#D6322D; --ok:#3F9E6B;
+  --nav:#2B2622;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#1D1916; --card:#2A2521; --ink:#F6EFE6; --muted:#A99E92; --line:#3A332D;
+    --peach:#3A2A20; --mint:#22332A; --lilac:#2D2940; --sun:#3B3320; --nav:#0F0D0B; }
+}
+*{box-sizing:border-box;margin:0}
+html,body{background:var(--bg);color:var(--ink);font-family:ui-rounded,"SF Pro Rounded","Nunito","Segoe UI",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+body{min-height:100vh;display:flex;justify-content:center}
+#app{width:100%;max-width:440px;min-height:100vh;padding:20px 16px 110px;position:relative}
+h1{font-size:26px;font-weight:700;letter-spacing:-.4px}
+h2{font-size:18px;font-weight:700}
+.sub{color:var(--muted);font-size:14px;margin-top:2px}
+.top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;gap:10px}
+.pill{font-size:12px;font-weight:600;padding:5px 10px;border-radius:99px;background:var(--card);border:1px solid var(--line);white-space:nowrap;display:inline-flex;gap:6px;align-items:center}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.dot.live{background:var(--ok)} .dot.demo{background:var(--caution)} .dot.err{background:var(--danger)}
+.card{background:var(--card);border-radius:24px;padding:18px;margin-bottom:14px;border:1px solid var(--line)}
+.gauge-card{text-align:center;background:var(--sun)}
+.label{font-size:12px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);font-weight:600}
+.level{font-size:30px;font-weight:800;margin-top:-4px}
+.feels{margin-top:6px;font-size:15px;color:var(--muted)} .feels b{color:var(--ink);font-size:20px}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.tile{border-radius:20px;padding:12px 10px;min-height:96px}
+.tile .v{font-size:24px;font-weight:800;margin-top:6px;line-height:1}
+.tile .u{font-size:12px;font-weight:600;color:var(--muted);margin-left:2px}
+.tile .n{font-size:11px;color:var(--muted);margin-top:6px}
+.t1{background:var(--peach)} .t2{background:var(--lilac)} .t3{background:var(--mint)}
+.seg{display:flex;background:var(--card);border:1px solid var(--line);border-radius:99px;padding:4px;margin:8px 0 14px}
+.seg button{flex:1;border:0;background:none;color:var(--muted);font:600 13px inherit;font-family:inherit;padding:8px 0;border-radius:99px;cursor:pointer}
+.seg button.on{background:var(--ink);color:var(--bg)}
+.mini{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mini .card{margin:0;padding:14px}
+.big{font-size:34px;font-weight:800;letter-spacing:-1px}
+svg text{font-family:inherit}
+.note{font-size:12px;color:var(--muted);line-height:1.45;margin-top:8px}
+.warnbox{background:var(--peach);border-radius:16px;padding:12px 14px;font-size:13px;line-height:1.45;margin-bottom:14px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.team{display:flex;align-items:center;gap:12px;padding:14px;cursor:pointer}
+.ava{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-weight:800;color:#fff;flex:none}
+.members{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.member{border-radius:20px;padding:14px;text-align:center;border:1px solid var(--line);background:var(--card)}
+.member .ava{margin:0 auto 8px}
+.badge{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;color:#fff;margin-top:6px}
+.back{background:none;border:0;color:var(--orange);font:700 14px inherit;font-family:inherit;margin-bottom:10px;cursor:pointer;padding:0}
+.incident{display:flex;gap:12px;align-items:center;background:var(--card);border-radius:20px;padding:14px;margin-top:12px;border:1px solid var(--line)}
+label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin:14px 0 5px;text-transform:uppercase;letter-spacing:.6px}
+input,select{width:100%;padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:500 15px inherit;font-family:inherit}
+.btn{width:100%;margin-top:16px;padding:14px;border-radius:99px;border:0;background:var(--orange);color:#fff;font:700 15px inherit;font-family:inherit;cursor:pointer}
+.btn.alt{background:var(--card);color:var(--ink);border:1px solid var(--line);margin-top:8px}
+.switch{display:flex;justify-content:space-between;align-items:center;padding:6px 0}
+nav{position:fixed;left:50%;transform:translateX(-50%);bottom:max(14px,env(safe-area-inset-bottom));width:calc(100% - 24px);max-width:416px;background:var(--nav);border-radius:99px;display:flex;padding:8px;gap:2px;z-index:10;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+nav button{flex:1;border:0;background:none;color:#B9AEA2;font:600 10px inherit;font-family:inherit;padding:8px 0 6px;border-radius:99px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer}
+nav button.on{background:var(--orange);color:#fff}
+nav svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.empty{padding:26px 10px;text-align:center;color:var(--muted);font-size:14px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<nav id="nav"></nav>
+
+<script>
+/* ================= settings & storage ================= */
+const DEFAULTS = {
+  name: "Joe", dbUrl: "", deviceId: "joe", demo: true,
+  warnF: 91, dangerF: 103,            // heat-index bands (deg F). Caution < warn <= Warning < danger <= Danger
+  teams: [{ id:"t1", name:"Big Brother Construction Crew", color:"#F2733A", members:["maria","dev"] },
+          { id:"t2", name:"Family", color:"#6C8EE8", members:["sam"] }]
+};
+let S;
+try { S = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem("sleeveSettings")||"{}")); } catch(e){ S = {...DEFAULTS}; }
+function save(){ try{ localStorage.setItem("sleeveSettings", JSON.stringify(S)); }catch(e){} }
+
+/* ================= heat index (NWS Rothfusz regression, deg F) ================= */
+function heatIndex(T, R){
+  if (T==null || R==null || isNaN(T) || isNaN(R)) return null;
+  let hi = 0.5*(T + 61 + (T-68)*1.2 + R*0.094);          // simple formula
+  if ((hi + T)/2 >= 80){
+    hi = -42.379 + 2.04901523*T + 10.14333127*R - 0.22475541*T*R - 0.00683783*T*T - 0.05481717*R*R
+         + 0.00122874*T*T*R + 0.00085282*T*R*R - 0.00000199*T*T*R*R;
+    if (R < 13 && T >= 80 && T <= 112) hi -= ((13-R)/4)*Math.sqrt((17-Math.abs(T-95))/17);
+    else if (R > 85 && T >= 80 && T <= 87) hi += ((R-85)/10)*((87-T)/5);
+  }
+  return hi;
+}
+function level(hi){
+  if (hi==null) return {name:"No data", color:"var(--muted)", idx:-1};
+  if (hi >= S.dangerF) return {name:"Danger", color:"var(--danger)", idx:2};
+  if (hi >= S.warnF)   return {name:"Warning", color:"var(--warning)", idx:1};
+  return {name:"Caution", color:"var(--caution)", idx:0};
+}
+// Heat strain score 0-10 per reading: mostly heat index, nudged up by high skin temp and heart rate.
+function strain(p){
+  const hi = heatIndex(p.air, p.rh); if (hi==null) return 0;
+  let s = Math.max(0, (hi-80)/4);
+  if (p.skin!=null && p.skin>93) s += (p.skin-93)*0.6;
+  if (p.hr>110) s += (p.hr-110)/20;
+  return Math.min(10, s);
+}
+// Heat debt: accumulates while strain > 2, drains while below. Heuristic, not physiological.
+function heatDebt(points){
+  let d=0, out=[];
+  for (let i=0;i<points.length;i++){
+    const dtMin = i? Math.min(30,(points[i].t-points[i-1].t)/60000):0;
+    d = Math.max(0, d + (strain(points[i])-2)*dtMin*0.25);
+    out.push({t:points[i].t, v:d});
+  }
+  return out;
+}
+
+/* ================= data: demo + live ================= */
+function demoSeries(hours, stepMin){
+  const pts=[], now=Date.now(); let seed=7;
+  const rnd=()=> (seed=(seed*16807)%2147483647)/2147483647;
+  for (let t=now-hours*3600e3; t<=now; t+=stepMin*60e3){
+    const h=new Date(t).getHours()+new Date(t).getMinutes()/60;
+    const day=Math.max(0,Math.sin((h-7)/14*Math.PI));          // work-day curve
+    const air=76+day*17+(rnd()-.5)*1.5, rh=62-day*20+(rnd()-.5)*3;
+    pts.push({t, air, rh, skin:90.5+day*5+(rnd()-.5)*.6, hr:Math.round(68+day*38+(rnd()-.5)*10)});
+  }
+  return pts;
+}
+let DATA=[], TEAM_LATEST={}, STATUS={mode:"demo", msg:"Demo data"};
+
+async function load(){
+  if (S.demo || !S.dbUrl){
+    DATA = demoSeries(24*7, 10); STATUS = {mode:"demo", msg:"Demo data"};
+    TEAM_LATEST = {maria:{hr:96,skin:96.1,air:89,rh:55}, dev:{hr:118,skin:98.2,air:94,rh:48}, sam:{hr:72,skin:91.4,air:78,rh:50}};
+    return render();
+  }
+  const base = S.dbUrl.replace(/\/+$/,"");
+  try{
+    const r = await fetch(`${base}/readings/${encodeURIComponent(S.deviceId)}.json?orderBy=%22$key%22&limitToLast=3000`);
+    if (!r.ok) throw new Error("HTTP "+r.status);
+    const j = await r.json() || {};
+    DATA = Object.entries(j).map(([k,v])=>({t: typeof v.t==="number"? v.t : null, air:v.air, rh:v.rh, skin:v.skin, hr:v.hr, k}))
+                 .filter(p=>p.t).sort((a,b)=>a.t-b.t);
+    STATUS = DATA.length ? {mode:"live", msg:"Live"} : {mode:"err", msg:"Connected, no readings yet"};
+    // teammates' latest values
+    TEAM_LATEST = {};
+    const ids = [...new Set(S.teams.flatMap(t=>t.members))];
+    await Promise.all(ids.map(async id=>{
+      try{ const rr = await fetch(`${base}/latest/${encodeURIComponent(id)}.json`); const v = await rr.json(); if (v) TEAM_LATEST[id]=v; }catch(e){}
+    }));
+  }catch(e){
+    STATUS = {mode:"err", msg:"Can't reach database ("+e.message+")"};
+  }
+  render();
+}
+
+/* ================= tiny SVG helpers ================= */
+const NS="http://www.w3.org/2000/svg";
+function fmtN(v,d=0){ return v==null||isNaN(v)?"--":v.toFixed(d); }
+function lineChart(pts, {w=380,h=150,color="#F2733A",fill=true,yMin,yMax,bands=[],timeFmt="hm"}={}){
+  if (pts.length<2) return `<div class="empty">Not enough data for this range yet.</div>`;
+  const xs=pts.map(p=>p.t), ys=pts.map(p=>p.v);
+  const x0=Math.min(...xs), x1=Math.max(...xs);
+  let lo = yMin ?? Math.min(...ys), hi = yMax ?? Math.max(...ys); if (hi-lo<1){hi+=.5;lo-=.5;}
+  const pad=(hi-lo)*.1; lo-=pad; hi+=pad;
+  const L=30,R=6,T=8,B=20, X=t=>L+(t-x0)/(x1-x0||1)*(w-L-R), Y=v=>T+(1-(v-lo)/(hi-lo))*(h-T-B);
+  const d = pts.map((p,i)=>(i?"L":"M")+X(p.t).toFixed(1)+" "+Y(p.v).toFixed(1)).join(" ");
+  let g=""; for(let i=0;i<4;i++){ const v=lo+(hi-lo)*i/3, y=Y(v); g+=`<line x1="${L}" x2="${w-R}" y1="${y}" y2="${y}" stroke="var(--line)"/><text x="${L-4}" y="${y+3}" font-size="9" fill="var(--muted)" text-anchor="end">${v.toFixed(Math.abs(hi-lo)<10?1:0)}</text>`; }
+  let b=""; bands.forEach(bd=>{ const ya=Y(Math.min(hi,bd.to)), yb=Y(Math.max(lo,bd.from)); if(yb>ya) b+=`<rect x="${L}" y="${ya}" width="${w-L-R}" height="${yb-ya}" fill="${bd.color}" opacity=".13"/>`; });
+  const f=new Date(x0), l=new Date(x1);
+  const lab = t=>{const d=new Date(t); return timeFmt==="hm"? d.toLocaleTimeString([], {hour:"numeric"}) : d.toLocaleDateString([], {month:"short",day:"numeric"});};
+  const area = fill? `<path d="${d} L${X(x1)} ${h-B} L${X(x0)} ${h-B} Z" fill="${color}" opacity=".15"/>`:"";
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" role="img" aria-label="chart">${b}${g}${area}<path d="${d}" fill="none" stroke="${color}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+    <text x="${L}" y="${h-5}" font-size="9" fill="var(--muted)">${lab(x0)}</text><text x="${w-R}" y="${h-5}" font-size="9" fill="var(--muted)" text-anchor="end">${lab(x1)}</text></svg>`;
+}
+function barChart(pts,{w=380,h=150,color="#F2733A",timeFmt="hm"}={}){
+  if (pts.length<2) return `<div class="empty">Not enough data for this range yet.</div>`;
+  const max=Math.max(...pts.map(p=>p.v),1), L=30,R=6,T=8,B=20, bw=(w-L-R)/pts.length;
+  let s=""; pts.forEach((p,i)=>{ const bh=(p.v/max)*(h-T-B); s+=`<rect x="${L+i*bw+bw*.15}" y="${h-B-bh}" width="${bw*.7}" height="${bh}" rx="3" fill="${color}"/>`; });
+  const lab=t=>{const d=new Date(t); return timeFmt==="hm"? d.toLocaleTimeString([], {hour:"numeric"}) : d.toLocaleDateString([], {month:"short",day:"numeric"});};
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" role="img" aria-label="bar chart"><line x1="${L}" x2="${w-R}" y1="${h-B}" y2="${h-B}" stroke="var(--line)"/>
+    <text x="${L-4}" y="${T+8}" font-size="9" fill="var(--muted)" text-anchor="end">${max.toFixed(0)}</text>${s}
+    <text x="${L}" y="${h-5}" font-size="9" fill="var(--muted)">${lab(pts[0].t)}</text><text x="${w-R}" y="${h-5}" font-size="9" fill="var(--muted)" text-anchor="end">${lab(pts[pts.length-1].t)}</text></svg>`;
+}
+function gauge(hi){
+  const lo=70, top=125, W=300, cx=150, cy=150, r=120;
+  const ang=v=>Math.PI*(1-(Math.min(top,Math.max(lo,v))-lo)/(top-lo));
+  const pt=(v,rr)=>[cx+rr*Math.cos(ang(v)), cy-rr*Math.sin(ang(v))];
+  const arc=(a,b,col)=>{const [x1,y1]=pt(a,r),[x2,y2]=pt(b,r); return `<path d="M${x1} ${y1} A${r} ${r} 0 0 1 ${x2} ${y2}" stroke="${col}" stroke-width="22" fill="none" stroke-linecap="butt"/>`;};
+  let needle="";
+  if (hi!=null){ const [nx,ny]=pt(hi,r-34); needle=`<line x1="${cx}" y1="${cy}" x2="${nx}" y2="${ny}" stroke="var(--ink)" stroke-width="5" stroke-linecap="round"/><circle cx="${cx}" cy="${cy}" r="9" fill="var(--ink)"/>`; }
+  return `<svg viewBox="0 0 ${W} 168" width="100%" role="img" aria-label="Heat risk gauge">
+    ${arc(lo,S.warnF,"#E9B44C")}${arc(S.warnF,S.dangerF,"#F2733A")}${arc(S.dangerF,top,"#D6322D")}
+    <text x="22" y="166" font-size="11" fill="var(--muted)" font-weight="600">Caution</text>
+    <text x="150" y="11" font-size="11" fill="var(--muted)" font-weight="600" text-anchor="middle">Warning</text>
+    <text x="278" y="166" font-size="11" fill="var(--muted)" font-weight="600" text-anchor="end">Danger</text>${needle}</svg>`;
+}
+
+/* ================= screens ================= */
+let TAB="overview", RANGE="Day", TEAM=null, TICK=0;
+const rangeMs = {Day:864e5, Week:6048e5, Month:2592e6, Year:31536e6};
+function latest(){ return DATA.length? DATA[DATA.length-1] : null; }
+function inRange(){ const t1=Date.now(); return DATA.filter(p=>p.t>=t1-rangeMs[RANGE]); }
+function bucket(points, fn, ms){  // average into time buckets
+  const m=new Map(); points.forEach(p=>{ const v=fn(p); if(v==null||isNaN(v)) return; const k=Math.floor(p.t/ms)*ms; const e=m.get(k)||{s:0,n:0}; e.s+=v; e.n++; m.set(k,e); });
+  return [...m.entries()].sort((a,b)=>a[0]-b[0]).map(([t,e])=>({t, v:e.s/e.n}));
+}
+const bucketMs = ()=> ({Day:36e5, Week:36e5*3, Month:864e5, Year:864e5*7}[RANGE]);
+
+function statusPill(){ return `<span class="pill"><span class="dot ${STATUS.mode}"></span>${STATUS.msg}</span>`; }
+
+function overview(){
+  const p=latest(), hi = p? heatIndex(p.air,p.rh):null, lv=level(hi);
+  const day = DATA.filter(x=>x.t>Date.now()-864e5).map(x=>({t:x.t,v:heatIndex(x.air,x.rh)})).filter(x=>x.v!=null);
+  const ds = bucket(day.map(x=>({t:x.t,v:x.v})), x=>x.v, 15*60e3);
+  const age = p? Math.round((Date.now()-p.t)/60000):null;
+  return `
+  <div class="top"><div><h1>Welcome, ${esc(S.name)}.</h1><div class="sub">${new Date().toLocaleDateString([], {weekday:"long",month:"long",day:"numeric"})}</div></div>${statusPill()}</div>
+  <div class="card gauge-card"><div class="label">Current risk</div>${gauge(hi)}
+    <div class="level" style="color:${lv.color}">${lv.name}</div>
+    <div class="feels">Feels like <b>${fmtN(hi)}°F</b>${age!=null?` · updated ${age<1?"just now":age+" min ago"}`:""}</div></div>
+  <div class="tiles">
+    <div class="tile t1"><div class="label">Heart</div><div class="v">${p&&p.hr?p.hr:"--"}<span class="u">bpm</span></div><div class="n">${p&&p.hr? (p.hr>110?"elevated":"normal"):"no finger"}</div></div>
+    <div class="tile t2"><div class="label">Skin</div><div class="v">${fmtN(p&&p.skin,1)}<span class="u">°F</span></div><div class="n">skin, not core</div></div>
+    <div class="tile t3"><div class="label">Air</div><div class="v">${fmtN(p&&p.air,0)}<span class="u">°F</span></div><div class="n">${fmtN(p&&p.rh,0)}% humidity</div></div>
+  </div>
+  <div class="card"><div class="row"><h2>Heat index today</h2><span class="sub">°F</span></div>
+    ${lineChart(ds,{bands:[{from:S.warnF,to:S.dangerF,color:"#F2733A"},{from:S.dangerF,to:200,color:"#D6322D"}]})}
+    <div class="note">Shaded bands: orange = Warning (≥${S.warnF}°F), red = Danger (≥${S.dangerF}°F).</div></div>
+  <div class="warnbox"><b>Prototype.</b> This is a hobby sensor project, not a medical or safety device. If you feel dizzy, nauseous or stop sweating, stop work, cool down and get help.</div>`;
+}
+
+function analysis(){
+  const pts=inRange(), bm=bucketMs(), tf = (RANGE==="Day")?"hm":"d";
+  const hiS = bucket(pts,p=>heatIndex(p.air,p.rh),bm), hrS=bucket(pts,p=>p.hr||null,bm),
+        skS=bucket(pts,p=>p.skin,bm), airS=bucket(pts,p=>p.air,bm);
+  const debt = heatDebt(pts); const dB = bucket(debt.map(d=>({t:d.t,v:d.v})),x=>x.v,bm);
+  const last=debt.length?debt[debt.length-1].v:0;
+  const enough = pts.length>3 && (pts[pts.length-1].t-pts[0].t) > rangeMs[RANGE]*0.5;
+  return `
+  <div class="top"><div><h1>Analysis</h1><div class="sub">Heat debt &amp; trends</div></div>${statusPill()}</div>
+  <div class="seg">${["Day","Week","Month","Year"].map(r=>`<button class="${r===RANGE?"on":""}" data-range="${r}">${r}</button>`).join("")}</div>
+  ${!enough && STATUS.mode==="live" ? `<div class="warnbox">Only part of this range has data so far. The page loads your latest ~3,000 readings (about 12 hours at one reading per 15 s). Longer ranges need daily roll-ups, which are not built yet.</div>`:""}
+  <div class="card"><div class="row"><h2>Heat debt</h2><div class="big" style="color:var(--orange)">${last.toFixed(0)}</div></div>
+    ${barChart(dB,{timeFmt:tf})}
+    <div class="note">Heat debt is a simple running tally: it builds while heat strain is above a moderate level and drains while you recover. It's a rough guide, not a physiological measurement.</div></div>
+  <div class="mini">
+    <div class="card"><div class="label">Heat strain</div>${lineChart(bucket(pts,strain,bm),{h:120,w:190,timeFmt:tf,color:"#D6322D",yMin:0})}</div>
+    <div class="card"><div class="label">Air temp °F</div>${lineChart(airS,{h:120,w:190,timeFmt:tf,color:"#E9B44C"})}</div>
+    <div class="card"><div class="label">Skin temp °F</div>${lineChart(skS,{h:120,w:190,timeFmt:tf,color:"#8B6FD6"})}</div>
+    <div class="card"><div class="label">Heart rate bpm</div>${lineChart(hrS,{h:120,w:190,timeFmt:tf,color:"#F0896B"})}</div>
+  </div>
+  <div class="card" style="margin-top:14px"><div class="label">Heat index °F</div>${lineChart(hiS,{timeFmt:tf})}</div>`;
+}
+
+function heatmap(){
+  // Illustrative tract grid. Real tract data (e.g. satellite surface temperature) would replace this.
+  let seed=11; const rnd=()=> (seed=(seed*16807)%2147483647)/2147483647;
+  const cols=16, rows=14, cells=[];
+  for(let y=0;y<rows;y++) for(let x=0;x<cols;x++){
+    const dx=x-cols*.45, dy=y-rows*.5, core=Math.exp(-(dx*dx+dy*dy)/38);
+    const inRiver = Math.abs(y-(6+Math.sin(x/2.2)*2.2))<1;
+    const inShape = (x+y*.5>3) && (x+y*.5<cols+rows*.35) && !(x>13&&y<3);
+    if(!inShape) continue;
+    cells.push({x,y,v:inRiver? .12 : Math.min(1,Math.max(0,.25+core*.6+(rnd()-.5)*.28))});
+  }
+  const col=v=>{ const stops=[[255,241,201],[250,196,120],[242,115,58],[190,40,40]]; const f=v*3,i=Math.min(2,Math.floor(f)),t=f-i; const c=stops[i].map((a,k)=>Math.round(a+(stops[i+1][k]-a)*t)); return `rgb(${c})`; };
+  const cw=22, ch=22;
+  const svg = `<svg viewBox="0 0 ${cols*cw} ${rows*ch}" width="100%" role="img" aria-label="Sample heat map grid">${cells.map(c=>`<rect x="${c.x*cw}" y="${c.y*ch}" width="${cw-2}" height="${ch-2}" rx="4" fill="${col(c.v)}"/>`).join("")}
+    <g transform="translate(${8*cw+3},${5*ch+3})"><circle r="14" fill="#fff" opacity=".9"/><circle r="9" fill="#D6322D"/><text y="4" font-size="12" font-weight="800" fill="#fff" text-anchor="middle">!</text></g></svg>`;
+  return `
+  <div class="top"><div><h1>Heat map</h1><div class="sub">BOSTON–CAMBRIDGE · 591 TRACTS</div></div><span class="pill"><span class="dot demo"></span>Sample</span></div>
+  <div class="card">${svg}
+    <div style="display:flex;align-items:center;gap:8px;margin-top:10px;font-size:11px;color:var(--muted)">Cooler <div style="flex:1;height:8px;border-radius:9px;background:linear-gradient(90deg,rgb(255,241,201),rgb(250,196,120),rgb(242,115,58),rgb(190,40,40))"></div> Hotter</div></div>
+  <div class="incident"><div class="ava" style="background:var(--danger)">!</div><div><b>Heat incident spotted here</b><div class="sub">Sample card. A crew member's alert would pin to the map.</div></div></div>
+  <div class="note">This map is a <b>placeholder with made-up values</b>. To make it real you'd load tract-level surface-temperature data for Boston–Cambridge and plot your sleeve's location (needs a GPS source, which the hub doesn't have yet).</div>`;
+}
+
+function memberCard(id){
+  const v=TEAM_LATEST[id]; const hi=v?heatIndex(v.air,v.rh):null; const lv=level(hi);
+  const cols=["#6C8EE8","#F0896B","#3F9E6B","#8B6FD6"]; const c=cols[(id.charCodeAt(0)||0)%cols.length];
+  return `<div class="member"><div class="ava" style="background:${c}">${esc(id[0]||"?").toUpperCase()}</div><b>${esc(id)}</b>
+    <div class="sub">${v&&v.hr?v.hr+" bpm":"--"} · ${v&&v.skin!=null?v.skin.toFixed(1)+"°F":"--"}</div><span class="badge" style="background:${lv.idx<0?"var(--muted)":lv.color}">${lv.name}</span></div>`;
+}
+function share(){
+  if(TEAM){
+    const t=S.teams.find(x=>x.id===TEAM);
+    return `<button class="back" data-act="back">‹ Your Teams</button><div class="top"><div><h1>${esc(t.name)}</h1><div class="sub">${t.members.length} member${t.members.length===1?"":"s"}</div></div></div>
+    <div class="members">${t.members.map(memberCard).join("")}</div>
+    <div class="note">Each person needs their own sleeve uploading under their own device ID. Members are looked up by device ID (edit under Profile).</div>`;
+  }
+  return `<div class="top"><div><h1>Share</h1><div class="sub">Your Teams</div></div></div>
+  ${S.teams.map(t=>`<div class="card team" data-team="${t.id}"><div class="ava" style="background:${t.color}">${esc(t.name[0])}</div><div style="flex:1"><b>${esc(t.name)}</b><div class="sub">${t.members.length} members</div></div><span style="color:var(--muted)">›</span></div>`).join("")}
+  <div class="note">In demo mode these teams show sample people. In live mode, members are device IDs read from your database.</div>`;
+}
+
+function profile(){
+  return `<div class="top"><div><h1>Profile</h1><div class="sub">Settings are saved in this browser</div></div>${statusPill()}</div>
+  <div class="card">
+    <div class="switch"><b>Demo mode</b><input type="checkbox" id="f_demo" style="width:auto" ${S.demo?"checked":""}></div>
+    <div class="note">Turn off to read your own sensor data from Firebase.</div>
+    <label>Your name</label><input id="f_name" value="${esc(S.name)}">
+    <label>Firebase database URL</label><input id="f_url" value="${esc(S.dbUrl)}" placeholder="https://your-project-default-rtdb.firebaseio.com" autocapitalize="off" autocorrect="off">
+    <label>Device ID (same as in firmware)</label><input id="f_dev" value="${esc(S.deviceId)}" autocapitalize="off">
+    <label>Warning starts at (heat index °F)</label><input id="f_warn" type="number" value="${S.warnF}">
+    <label>Danger starts at (heat index °F)</label><input id="f_dng" type="number" value="${S.dangerF}">
+    <label>Team members (device IDs, comma separated) for “${esc(S.teams[0].name)}”</label><input id="f_mem" value="${esc(S.teams[0].members.join(", "))}">
+    <button class="btn" data-act="save">Save &amp; reload data</button>
+    <button class="btn alt" data-act="reset">Reset to defaults</button>
+  </div>
+  <div class="note">The page only needs the database URL. Never put your database secret here; that stays in the ESP32 firmware.</div>`;
+}
+
+const esc = s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const ICONS = {
+  overview:'<svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>',
+  analysis:'<svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
+  heatmap:'<svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 0 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>',
+  share:'<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M17 11a3 3 0 1 0 0-6M21 20c0-2.6-1.6-4.6-4-5.5"/></svg>',
+  profile:'<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>'
+};
+const TABS=[["overview","Overview"],["analysis","Analysis"],["heatmap","Heat Map"],["share","Share"],["profile","Profile"]];
+
+function render(){
+  const app=document.getElementById("app"), scroll=window.scrollY;
+  app.innerHTML = {overview,analysis,heatmap,share,profile}[TAB]();
+  document.getElementById("nav").innerHTML = TABS.map(([k,l])=>`<button class="${k===TAB?"on":""}" data-tab="${k}" aria-label="${l}">${ICONS[k]}${l}</button>`).join("");
+  window.scrollTo(0,scroll);
+}
+document.addEventListener("click",e=>{
+  const t=e.target.closest("[data-tab],[data-range],[data-team],[data-act]"); if(!t) return;
+  if(t.dataset.tab){ TAB=t.dataset.tab; TEAM=null; window.scrollTo(0,0); render(); }
+  else if(t.dataset.range){ RANGE=t.dataset.range; render(); }
+  else if(t.dataset.team){ TEAM=t.dataset.team; render(); }
+  else if(t.dataset.act==="back"){ TEAM=null; render(); }
+  else if(t.dataset.act==="reset"){ S={...DEFAULTS}; save(); load(); }
+  else if(t.dataset.act==="save"){
+    S.demo=document.getElementById("f_demo").checked; S.name=document.getElementById("f_name").value.trim()||"Joe";
+    S.dbUrl=document.getElementById("f_url").value.trim(); S.deviceId=document.getElementById("f_dev").value.trim()||"joe";
+    S.warnF=+document.getElementById("f_warn").value||91; S.dangerF=+document.getElementById("f_dng").value||103;
+    if(S.dangerF<=S.warnF) S.dangerF=S.warnF+12;
+    S.teams[0].members=document.getElementById("f_mem").value.split(",").map(s=>s.trim()).filter(Boolean);
+    save(); TAB="overview"; load();
+  }
+});
+load();
+setInterval(()=>{ if(!S.demo && S.dbUrl && TAB!=="profile" && document.visibilityState==="visible") load(); }, 30000);
+</script>
+</body>
+</html>
