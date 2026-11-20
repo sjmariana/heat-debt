@@ -74,7 +74,7 @@ nav svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.9;st
 <script>
 /* ================= settings & storage ================= */
 const DEFAULTS = {
-  name: "Joe", dbUrl: "", deviceId: "joe", demo: true,
+  name: "Mariana", dbUrl: "", deviceId: "mariana", demo: true,
   warnF: 91, dangerF: 103,            // heat-index bands (deg F). Caution < warn <= Warning < danger <= Danger
   teams: [{ id:"t1", name:"Big Brother Construction Crew", color:"#F2733A", members:["maria","dev"] },
           { id:"t2", name:"Family", color:"#6C8EE8", members:["sam"] }]
@@ -341,8 +341,8 @@ document.addEventListener("click",e=>{
   else if(t.dataset.act==="back"){ TEAM=null; render(); }
   else if(t.dataset.act==="reset"){ S={...DEFAULTS}; save(); load(); }
   else if(t.dataset.act==="save"){
-    S.demo=document.getElementById("f_demo").checked; S.name=document.getElementById("f_name").value.trim()||"Joe";
-    S.dbUrl=document.getElementById("f_url").value.trim(); S.deviceId=document.getElementById("f_dev").value.trim()||"joe";
+    S.demo=document.getElementById("f_demo").checked; S.name=document.getElementById("f_name").value.trim()||"Mariana";
+    S.dbUrl=document.getElementById("f_url").value.trim(); S.deviceId=document.getElementById("f_dev").value.trim()||"mariana";
     S.warnF=+document.getElementById("f_warn").value||91; S.dangerF=+document.getElementById("f_dng").value||103;
     if(S.dangerF<=S.warnF) S.dangerF=S.warnF+12;
     S.teams[0].members=document.getElementById("f_mem").value.split(",").map(s=>s.trim()).filter(Boolean);
